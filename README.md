@@ -1,0 +1,1 @@
+# povprecna_razdalja
