@@ -4,16 +4,16 @@ import heapq
 class Graph:
     def __init__(self, num_vertices):
         """
-        Initializes the graph with a list of edges.
+        Initializes the graph with an adjacency list.
         """
         self.num_vertices = num_vertices
-        self.edges = []
+        self.adjacency_list = [[] for _ in range(num_vertices)]
 
     def add_edge(self, u, v, weight):
         """
-        Adds an edge to the graph.
+        Adds a directed edge to the graph.
         """
-        self.edges.append((u, v, weight))
+        self.adjacency_list[u].append((v, weight))
 
 
 def bellman_ford(graph, start):
@@ -24,19 +24,22 @@ def bellman_ford(graph, start):
     # Relax edges up to (num_vertices - 1) times
     for _ in range(num_vertices - 1):
         updated = False
-        for u, v, weight in graph.edges:
-            if distance[u] != float('inf') and distance[u] + weight < distance[v]:
-                distance[v] = distance[u] + weight
-                updated = True
+        for u in range(num_vertices):
+            for v, weight in graph.adjacency_list[u]:
+                if distance[u] != float('inf') and distance[u] + weight < distance[v]:
+                    distance[v] = distance[u] + weight
+                    updated = True
         if not updated:
             break
 
     # Check for negative cycles
-    for u, v, weight in graph.edges:
-        if distance[u] != float('inf') and distance[u] + weight < distance[v]:
-            return None  # Negative cycle detected
+    for u in range(num_vertices):
+        for v, weight in graph.adjacency_list[u]:
+            if distance[u] != float('inf') and distance[u] + weight < distance[v]:
+                return None  # Negative cycle detected
 
     return distance
+
 
 def dijkstra(graph, start):
     num_vertices = graph.num_vertices
@@ -55,7 +58,7 @@ def dijkstra(graph, start):
             continue
 
         # Explore neighbors
-        for neighbor, weight in graph[current_vertex]:
+        for neighbor, weight in graph.adjacency_list[current_vertex]:
             distance = current_distance + weight
 
             # If a shorter path is found, update the distance and push to the priority queue
@@ -66,33 +69,55 @@ def dijkstra(graph, start):
     return distances
 
 
-input_data = """
-4 6
-0 1 -0.5
-0 2 1
-1 3 2
-2 3 1
-3 0 -1
-3 1 -0.5                                                            b
-"""
+def calculate_average_distance(n, edges):
+    # Create the graph with n+1 vertices (including v0)
+    graph = Graph(n + 1)
+    
+    # Add the original edges
+    for u, v, w in edges:
+        graph.add_edge(u, v, w)
+    
+    # Connect new vertex v0 to all other vertices with undirected edges of weight 0
+    v0 = n
+    for u in range(n):
+        graph.add_edge(v0, u, 0)  # Edge from v0 to u
+    
+    # Run Bellman-Ford from v0
+    distances = bellman_ford(graph, v0)
+    if distances is None:
+        return "negativen cikel"
+    
+    # Re-weight the edges
+    reweighted_graph = Graph(n)
+    for u in range(n):
+        for v, weight in graph.adjacency_list[u]:
+            if v != v0:  # Skip edges involving v0
+                reweighted_graph.add_edge(u, v, weight + distances[u] - distances[v])
+    
+    # Calculate all pairs shortest paths using Dijkstra
+    total_distance = 0
+    for u in range(n):
+        dist = dijkstra(reweighted_graph, u)
+        for v in range(n):
+            if u != v:
+                if dist[v] == float('inf'):
+                    return "negativen cikel"
+                # Adjust the distance back to the original graph's distance
+                total_distance += dist[v] - distances[u] + distances[v]
+    
+    # Calculate the average distance
+    average_distance = total_distance / (n * (n - 1))
+    return average_distance
 
-# Parse input data
-lines = input_data.strip().split("\n")
-num_vertices, num_edges = map(int, lines[0].split())
-graph = Graph(num_vertices)
+if __name__ == "__main__":
+    # Parse input data
+    lines = sys.stdin.read().strip().split("\n")
+    num_vertices, num_edges = map(int, lines[0].split())
+    edges = []
+    for line in lines[1:]:
+        u, v, weight = map(float, line.split())
+        edges.append((int(u), int(v), weight))
 
-for line in lines[1:]:
-    u, v, weight = map(float, line.split())
-    graph.add_edge(int(u), int(v), weight)
-
-# Run Bellman-Ford from vertex 0
-start_vertex = 0
-distances = bellman_ford(graph, start_vertex)
-
-# Output the result
-if distances is None:
-    print("negativen cikel")
-else:
-    print("Shortest distances from vertex", start_vertex, ":")
-    for vertex, distance in enumerate(distances):
-        print(f"Vertex {vertex}: {distance}")
+    # Calculate average distance
+    result = calculate_average_distance(num_vertices, edges)
+    print(result)

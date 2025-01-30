@@ -7,9 +7,9 @@ from time import time
 
 
 tests_path = 'Tests'
-python_path = 'python3'
+python_path = 'python'
 
-def run_tests(script_name, python_path = 'python3'):
+def run_tests(script_name, python_path = 'python'):
     # Najdemo vse testne primere
     tests = sorted([i for i in os.listdir(tests_path) if i.endswith('in')])    
     n_tests = len(tests)
