@@ -5,7 +5,9 @@ This repository contains an implementation to calculate the average distance bet
 ## Problem Description
 
 Given a directed and weighted graph $G = (V(G), E(G))$ with edge weights $w : E(G) \rightarrow \mathbb{R}$ (which may be negative), the task is to calculate the average distance $\mu(G)$ between all pairs of vertices. The average distance is defined as:
+
 $$\mu(G) = \frac{\sum_{(u, v) \in V(G) \times V(G)} d_G(u, v)}{n(n - 1)},$$
+
 where $n = |V(G)|$, and $d_G(u, v)$ represents the shortest path distance from vertex $u$ to vertex $v$ in the graph $G$.
 
 If the graph contains a negative cycle, the algorithm should return `negativen cikel` (Slovene for "negative cycle").
@@ -37,14 +39,18 @@ The algorithm follows these steps:
    - Calculate the shortest path distances $f_v=d_{G'}(v0,v)$ for every vertex $v\in V(G)$ using the Bellman-Ford algorithm.
 2. Edge Weight Transformation:
    - Transform the edge weights using the formula:
+     
         $$w′(e)=w(e)+f_u−f_v$$
+     
         where $e=uv$ is an edge in the graph. This ensures that all edge weights in the transformed graph are non-negative.
 3. Shortest Path Calculation:
    - Use Dijkstra's algorithm on the transformed graph $G'$ to calculate the shortest path distances $d_{G'}(u,v)$ for all pairs of vertices $u,\ v$.
 
 4. Average Distance Calculation:
    - Calculate the average distance  $\mu(G)$ using the formula:
+     
      $$\mu(G) = \frac{\sum_{(u, v) \in V(G) \times V(G)} d_G(u, v)}{n(n - 1)},$$
+     
      where $d_G(u,v)$ is derived from the transformed graph's distances.
 
 5. Negative Cycle Detection:
